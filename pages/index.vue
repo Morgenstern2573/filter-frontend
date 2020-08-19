@@ -28,7 +28,8 @@ export default {
       wedCourses: [],
       thurCourses: [],
       friCourses: [],
-      coursesGotten: false
+      coursesGotten: false,
+      isLoading: false
     };
   },
 
@@ -95,7 +96,9 @@ export default {
 
     async generateTimeTable() {
       if (this.courseList != "") {
+        this.isLoading = true;
         let data = await getCourseData(this.courseList);
+        this.isLoading = false;
         if (data != undefined) {
           this.coursesGotten = true;
           this.notFound = data["not_found"];
@@ -157,6 +160,15 @@ export default {
 
 <template>
   <div class="flex items-center mx-auto flex-col mt-8">
+    <div
+      v-show="isLoading"
+      class="absolute flex items-center justify-center inset-0 bg-gray-100  bg-opacity-50"
+    >
+      <div
+        class=" border-4 border-gray-200 rounded-full h-20 w-20 animate-spin"
+        style="border-top: 4px solid white"
+      ></div>
+    </div>
     <div
       v-show="!coursesGotten"
       class="rounded bg-gray-200 shadow-md p-12 py-4"
