@@ -1,0 +1,389 @@
+<script>
+import { getCourseData } from "~/lib/api.js";
+import tableHeader from "~/components/tableHeader.vue";
+import tableRow from "~/components/tableRow.vue";
+function compareTimes(a, b) {
+  let val1 = Number(a[1].split("-")[0]);
+  let val2 = Number(b[1].split("-")[0]);
+
+  if (val1 < val2) {
+    return -1;
+  } else if (val1 == val2) {
+    return 0;
+  } else {
+    return 1;
+  }
+}
+
+export default {
+  data: function() {
+    return {
+      courseList: "",
+      courseCode: "",
+      notFound: [],
+      isInputErr: false,
+      inputErr: "",
+      monCourses: [],
+      tueCourses: [],
+      wedCourses: [],
+      thurCourses: [],
+      friCourses: [],
+      coursesGotten: false
+    };
+  },
+
+  components: {
+    "table-header": tableHeader,
+    "table-row": tableRow
+  },
+
+  methods: {
+    validateCourseCode() {
+      if (this.courseCode.trim() == "") {
+        return { status: "fail" };
+      }
+
+      let courses = this.courseList.split(",");
+      if (courses.includes(this.courseCode.trim())) {
+        this.isInputErr = true;
+        this.inputErr = "You've already added this course code!";
+        return { status: "fail" };
+      }
+
+      let val = this.courseCode.trim().split(" ");
+      val = val.filter(item => {
+        return item != "";
+      });
+
+      if (val.length < 2) {
+        this.isInputErr = true;
+        this.inputErr =
+          "Put a space between the numbers and the letters. Eg: ABC 123";
+        return { status: "fail" };
+      } else if (val.length > 2) {
+        this.isInputErr = true;
+        this.inputErr = "Only input one course code at a time";
+        return { status: "fail" };
+      } else if (!Number.isInteger(Number(val[1]))) {
+        this.isInputErr = true;
+        this.inputErr = "Input value must be a course code";
+        return { status: "fail" };
+      } else {
+        return { status: "pass", val };
+      }
+    },
+
+    appendCourseCode() {
+      let res = this.validateCourseCode();
+      if (res.status == "fail") {
+        return;
+      } else {
+        let val = res["val"];
+        val = val[0].toUpperCase() + " " + val[1] + ",";
+        this.courseList += val;
+        this.courseCode = "";
+        this.isInputErr = false;
+        this.inputErr = "";
+      }
+    },
+
+    clearCourseList() {
+      this.courseList = "";
+      this.isInputErr = false;
+      this.inputErr = "";
+    },
+
+    async generateTimeTable() {
+      if (this.courseList != "") {
+        let data = await getCourseData(this.courseList);
+        if (data != undefined) {
+          this.coursesGotten = true;
+          this.notFound = data["not_found"];
+          console.log(data);
+
+          let codes = data["codes"],
+            loctimes = data["times"];
+
+          for (let i = 0; i < loctimes.length; i++) {
+            for (let j = 0; j < loctimes[i].length; j++) {
+              let item = loctimes[i][j];
+
+              if (item[0] == "monday") {
+                this.monCourses.push([codes[i], item[1], item[2]]);
+              } else if (item[0] == "tuesday") {
+                this.tueCourses.push([codes[i], item[1], item[2]]);
+              } else if (item[0] == "wednesday") {
+                this.wedCourses.push([codes[i], item[1], item[2]]);
+              } else if (item[0] == "thursday") {
+                this.thurCourses.push([codes[i], item[1], item[2]]);
+              } else {
+                this.friCourses.push([codes[i], item[1], item[2]]);
+              }
+            }
+          }
+
+          this.monCourses.sort(compareTimes);
+          this.tueCourses.sort(compareTimes);
+          this.wedCourses.sort(compareTimes);
+          this.thurCourses.sort(compareTimes);
+          this.friCourses.sort(compareTimes);
+        }
+      } else {
+        return;
+      }
+    },
+
+    resetTimetable() {
+      this.coursesGotten = false;
+      this.monCourses = [];
+      this.tueCourses = [];
+      this.wedCourses = [];
+      this.thurCourses = [];
+      this.friCourses = [];
+      this.notFound = [];
+    },
+
+    deleteLastCourseCode() {
+      let val = this.courseList.split(",");
+      val.splice(-2);
+      this.courseList = val.join(",");
+      if (this.courseList != "") {
+        this.courseList += ",";
+      }
+    }
+  }
+};
+</script>
+
+<template>
+  <div class="flex items-center mx-auto flex-col mt-8">
+    <div
+      v-show="!coursesGotten"
+      class="rounded bg-gray-200 shadow-md p-12 py-4"
+    >
+      <h1 class=" text-center text-3xl font-bold">TimeTable Generator</h1>
+      <h2 class="text-center text-sm font-mono font-light mb-8">
+        For the Faculty of Science, Unilag
+      </h2>
+
+      <div class="flex justify-center items-center flex-wrap">
+        <p class=" mr-4">Add Course:</p>
+        <input
+          @keyup.enter="appendCourseCode"
+          v-model="courseCode"
+          type="text"
+          placeholder="Course Code here..."
+          class="bg-gray-100 border border-gray-300 rounded shadow px-2 py-1 focus:bg-white outline-none"
+          autofocus="true"
+        />
+        <p @click="appendCourseCode" class="btn btn-green my-4">
+          Add
+        </p>
+      </div>
+
+      <div
+        class="text-center text-red-800 bg-red-300 p-4 rounded-md w-full"
+        v-show="isInputErr"
+      >
+        <p>{{ inputErr }}</p>
+      </div>
+
+      <div class="flex justify-center items-center mt-4 flex-col">
+        <div class="flex items-center">
+          <p class="mr-4">Course List:</p>
+          <p
+            class="border border-gray-300 rounded shadow px-2 py-1 bg-white"
+            v-show="courseList.length > 0"
+          >
+            {{ courseList }}
+          </p>
+        </div>
+        <div class="flex justify-center items-center mt-4">
+          <p @click="clearCourseList" class="btn btn-red">
+            Reset
+          </p>
+          <p
+            @click="deleteLastCourseCode"
+            style="width:8rem"
+            class="btn btn-red"
+          >
+            Delete Last
+          </p>
+        </div>
+      </div>
+
+      <div class="flex justify-center items-center mt-4">
+        <p
+          @click="generateTimeTable"
+          class="btn btn-green"
+          style="width: 12rem"
+        >
+          Generate TimeTable
+        </p>
+      </div>
+
+      <span class="text-center text-sm w-full block mt-4"
+        >Confused about something? The FAQs are
+        <nuxt-link class="underline" to="/faq">over here</nuxt-link></span
+      >
+    </div>
+
+    <div
+      v-show="notFound.length > 0"
+      class="text-center text-red-800 bg-red-300 p-4"
+    >
+      <span
+        >Warning!The following course(s) were not found in the database:</span
+      >
+      <span v-for="(item, index) in notFound" :key="index" class="mx-1">
+        {{ item }}
+      </span>
+    </div>
+
+    <div class="flex flex-col w-4/5" v-show="coursesGotten">
+      <div class="my-4">
+        <p class=" font-semibold text-lg">Monday</p>
+        <div v-if="monCourses.length > 0">
+          <table-header></table-header>
+          <table-row
+            v-for="(course, index) in monCourses"
+            :key="course[0] + index"
+          >
+            <template #time>
+              {{ course[1] }}
+            </template>
+
+            <template #code>
+              {{ course[0] }}
+            </template>
+
+            <template #venue>
+              {{ course[2] }}
+            </template>
+          </table-row>
+        </div>
+        <p v-else>No Courses found for this day</p>
+      </div>
+
+      <div class="my-4">
+        <p class=" font-semibold text-lg">Tuesday</p>
+        <div v-if="tueCourses.length > 0">
+          <table-header></table-header>
+          <table-row
+            v-for="(course, index) in tueCourses"
+            :key="course[0] + index"
+          >
+            <template #time>
+              {{ course[1] }}
+            </template>
+
+            <template #code>
+              {{ course[0] }}
+            </template>
+
+            <template #venue>
+              {{ course[2] }}
+            </template>
+          </table-row>
+        </div>
+        <p v-else>No Courses found for this day</p>
+      </div>
+
+      <div class="my-4">
+        <p class=" font-semibold text-lg">Wednesday</p>
+        <div v-if="wedCourses.length > 0">
+          <table-header></table-header>
+          <table-row
+            v-for="(course, index) in wedCourses"
+            :key="course[0] + index"
+          >
+            <template #time>
+              {{ course[1] }}
+            </template>
+
+            <template #code>
+              {{ course[0] }}
+            </template>
+
+            <template #venue>
+              {{ course[2] }}
+            </template>
+          </table-row>
+        </div>
+        <p v-else>No Courses found for this day</p>
+      </div>
+
+      <div class="my-4">
+        <p class=" font-semibold text-lg">Thursday</p>
+        <div v-if="thurCourses.length > 0">
+          <table-header></table-header>
+          <table-row
+            v-for="(course, index) in thurCourses"
+            :key="course[0] + index"
+          >
+            <template #time>
+              {{ course[1] }}
+            </template>
+
+            <template #code>
+              {{ course[0] }}
+            </template>
+
+            <template #venue>
+              {{ course[2] }}
+            </template>
+          </table-row>
+        </div>
+        <p v-else>No Courses found for this day</p>
+      </div>
+
+      <div class="my-4">
+        <p class=" font-semibold text-lg">Friday</p>
+        <div v-if="friCourses.length > 0">
+          <table-header></table-header>
+          <table-row
+            v-for="(course, index) in friCourses"
+            :key="course[0] + index"
+          >
+            <template #time>
+              {{ course[1] }}
+            </template>
+
+            <template #code>
+              {{ course[0] }}
+            </template>
+
+            <template #venue>
+              {{ course[2] }}
+            </template>
+          </table-row>
+        </div>
+        <p v-else>No Courses found for this day</p>
+      </div>
+
+      <div class="flex w-full justify-center items-center mt-4">
+        <p @click="resetTimetable" class="btn btn-red">Back</p>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+/* Sample `apply` at-rules with Tailwind CSS
+.container {
+@apply min-h-screen flex justify-center items-center text-center mx-auto;
+}
+*/
+
+.btn {
+  @apply p-1 rounded shadow text-white w-20 text-center mx-2 cursor-pointer;
+}
+
+.btn-green {
+  @apply bg-green-600;
+}
+
+.btn-red {
+  @apply bg-red-600;
+}
+</style>
