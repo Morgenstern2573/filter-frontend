@@ -58,7 +58,7 @@ export default {
   build: {},
 
   axios: {
-    baseURL: "http://127.0.0.1:5000",
+    baseURL: "https://lit-citadel-58061.herokuapp.com",
     credentials: false
   }
 };
