@@ -2,9 +2,19 @@
 import { getCourseData } from "~/lib/api.js";
 import tableHeader from "~/components/tableHeader.vue";
 import tableRow from "~/components/tableRow.vue";
-function compareTimes(a, b) {
-  let val1 = Number(a[1].split("-")[0]);
-  let val2 = Number(b[1].split("-")[0]);
+
+//The callback function used to sort courses based on their time
+function compareTimes(timeOne = "", timeTwo = "") {
+  if (!timeOne || !timeTwo) {
+    return;
+  }
+
+  if (typeof timeOne !== String || typeof timeTwo !== String) {
+    throw new Error("One argument passed is not a string");
+  }
+
+  let val1 = Number(timeOne[1].split("-")[0]);
+  let val2 = Number(timeTwo[1].split("-")[0]);
 
   if (val1 < val2) {
     return -1;
@@ -88,25 +98,23 @@ export default {
       }
     },
 
-    clearCourseList() {
-      this.courseList = "";
-      this.isInputErr = false;
-      this.inputErr = "";
-    },
-
     async generateTimeTable() {
       if (this.courseList != "") {
+        //request for time table data
         this.isLoading = true;
         let data = await getCourseData(this.courseList);
         this.isLoading = false;
+
         if (data != undefined) {
           this.coursesGotten = true;
+          //populate list of courses not found in the database
           this.notFound = data["not_found"];
           console.log(data);
 
           let codes = data["codes"],
             loctimes = data["times"];
 
+          // group the returned courses by day of the week
           for (let i = 0; i < loctimes.length; i++) {
             for (let j = 0; j < loctimes[i].length; j++) {
               let item = loctimes[i][j];
@@ -125,6 +133,7 @@ export default {
             }
           }
 
+          // sort grouped courses in ascending order by time
           this.monCourses.sort(compareTimes);
           this.tueCourses.sort(compareTimes);
           this.wedCourses.sort(compareTimes);
@@ -153,6 +162,12 @@ export default {
       if (this.courseList != "") {
         this.courseList += ",";
       }
+    },
+
+    clearCourseList() {
+      this.courseList = "";
+      this.isInputErr = false;
+      this.inputErr = "";
     }
   }
 };
@@ -224,7 +239,7 @@ export default {
         </div>
       </div>
 
-      <div class="flex justify-center items-center mt-4">
+      <div class="flex justify-center items-center mt-8">
         <p
           @click="generateTimeTable"
           class="btn btn-green"
@@ -381,14 +396,8 @@ export default {
 </template>
 
 <style scoped>
-/* Sample `apply` at-rules with Tailwind CSS
-.container {
-@apply min-h-screen flex justify-center items-center text-center mx-auto;
-}
-*/
-
 .btn {
-  @apply p-1 rounded shadow text-white w-20 text-center mx-2 cursor-pointer;
+  @apply p-1 rounded shadow text-white w-32 text-center mx-2 cursor-pointer;
 }
 
 .btn-green {
@@ -396,6 +405,6 @@ export default {
 }
 
 .btn-red {
-  @apply bg-red-600;
+  @apply bg-red-400;
 }
 </style>
