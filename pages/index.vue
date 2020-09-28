@@ -174,222 +174,231 @@ export default {
 </script>
 
 <template>
-  <div class="flex items-center mx-auto flex-col mt-8">
-    <div
-      v-show="isLoading"
-      class="absolute flex items-center justify-center inset-0 bg-gray-100  bg-opacity-50"
-    >
+  <div class=" flex min-h-screen justify-center items-center">
+    <div class="flex items-center flex-col">
+      <!-- css loader -->
       <div
-        class=" border-4 border-gray-200 rounded-full h-20 w-20 animate-spin"
-        style="border-top: 4px solid white"
-      ></div>
-    </div>
-    <div
-      v-show="!coursesGotten"
-      class="rounded bg-gray-200 shadow-md p-12 py-4"
-    >
-      <h1 class=" text-center text-3xl font-bold">TimeTable Generator</h1>
-      <h2 class="text-center text-sm font-mono font-light mb-8">
-        For the Faculty of Science, Unilag
-      </h2>
-
-      <div class="flex justify-center items-center flex-wrap">
-        <p class=" mr-4">Add Course:</p>
-        <input
-          @keyup.enter="appendCourseCode"
-          v-model="courseCode"
-          type="text"
-          placeholder="Course Code here..."
-          class="bg-gray-100 border border-gray-300 rounded shadow px-2 py-1 focus:bg-white outline-none"
-          autofocus="true"
-        />
-        <p @click="appendCourseCode" class="btn btn-green my-4">
-          Add
-        </p>
-      </div>
-
-      <div
-        class="text-center text-red-800 bg-red-300 p-4 rounded-md w-full"
-        v-show="isInputErr"
+        v-show="isLoading"
+        class="absolute flex items-center justify-center inset-0 bg-gray-100  bg-opacity-50"
       >
-        <p>{{ inputErr }}</p>
+        <div
+          class=" border-4 border-gray-200 rounded-full h-20 w-20 animate-spin"
+          style="border-top: 4px solid white"
+        ></div>
       </div>
-
-      <div class="flex justify-center items-center mt-4 flex-col">
-        <div class="flex items-center">
-          <p class="mr-4">Course List:</p>
-          <p
-            class="border border-gray-300 rounded shadow px-2 py-1 bg-white"
-            v-show="courseList.length > 0"
-          >
-            {{ courseList }}
-          </p>
-        </div>
-        <div class="flex justify-center items-center mt-4">
-          <p @click="clearCourseList" class="btn btn-red">
-            Reset
-          </p>
-          <p
-            @click="deleteLastCourseCode"
-            style="width:8rem"
-            class="btn btn-red"
-          >
-            Delete Last
-          </p>
-        </div>
-      </div>
-
-      <div class="flex justify-center items-center mt-8">
-        <p
-          @click="generateTimeTable"
-          class="btn btn-green"
-          style="width: 12rem"
+      <!-- course selection box -->
+      <div
+        v-show="!coursesGotten"
+        class="rounded bg-white bg-opacity-25 shadow-md p-12 py-4"
+      >
+        <h1 class=" text-center text-3xl font-bold">TimeTable Generator</h1>
+        <h2
+          class="text-center text-sm font-mono font-light mb-8 text-green-800"
         >
-          Generate TimeTable
-        </p>
+          For the Faculty of Science, Unilag
+        </h2>
+
+        <div class="flex justify-center items-center flex-wrap">
+          <input
+            @keyup.enter="appendCourseCode"
+            v-model="courseCode"
+            type="text"
+            placeholder="Course Code here..."
+            class="bg-gray-100 border border-gray-300 rounded shadow px-2 py-1 focus:bg-white outline-none"
+            autofocus="true"
+          />
+          <p @click="appendCourseCode" class="btn btn-orange my-4">
+            Add
+          </p>
+        </div>
+
+        <div
+          class="text-center text-red-800 bg-red-300 p-4 rounded-md w-full"
+          v-show="isInputErr"
+        >
+          <p>{{ inputErr }}</p>
+        </div>
+
+        <div v-if="courseList.length > 0">
+          <div class="flex justify-center items-center mt-4 flex-col">
+            <div class="flex items-center">
+              <p class="mr-4">Course List:</p>
+              <p
+                class="border border-gray-300 rounded shadow px-2 py-1 bg-white"
+                v-show="courseList.length > 0"
+              >
+                {{ courseList }}
+              </p>
+            </div>
+            <div class="flex justify-center items-center mt-4">
+              <p @click="clearCourseList" class="btn btn-green">
+                Reset
+              </p>
+              <p
+                @click="deleteLastCourseCode"
+                style="width:8rem"
+                class="btn btn-green"
+              >
+                Delete Last
+              </p>
+            </div>
+          </div>
+
+          <div class="flex justify-center items-center mt-8">
+            <p
+              @click="generateTimeTable"
+              class="btn btn-orange"
+              style="width: 12rem"
+            >
+              Generate TimeTable
+            </p>
+          </div>
+        </div>
+
+        <span class="text-center text-sm w-full block mt-4"
+          >Confused about something? The FAQs are
+          <nuxt-link class="underline" to="/faq">over here</nuxt-link></span
+        >
       </div>
 
-      <span class="text-center text-sm w-full block mt-4"
-        >Confused about something? The FAQs are
-        <nuxt-link class="underline" to="/faq">over here</nuxt-link></span
+      <!-- courses not found -->
+      <div
+        v-show="notFound.length > 0"
+        class="text-center text-red-800 bg-red-300 p-4"
       >
-    </div>
-
-    <div
-      v-show="notFound.length > 0"
-      class="text-center text-red-800 bg-red-300 p-4"
-    >
-      <span
-        >Warning!The following course(s) were not found in the database:</span
-      >
-      <span v-for="(item, index) in notFound" :key="index" class="mx-1">
-        {{ item }}
-      </span>
-    </div>
-
-    <div class="flex flex-col w-4/5" v-show="coursesGotten">
-      <div class="my-4">
-        <p class=" font-semibold text-lg">Monday</p>
-        <div v-if="monCourses.length > 0">
-          <table-header></table-header>
-          <table-row
-            v-for="(course, index) in monCourses"
-            :key="course[0] + index"
-          >
-            <template #time>
-              {{ course[1] }}
-            </template>
-
-            <template #code>
-              {{ course[0] }}
-            </template>
-
-            <template #venue>
-              {{ course[2] }}
-            </template>
-          </table-row>
-        </div>
-        <p v-else>No Courses found for this day</p>
+        <span
+          >Warning!The following course(s) were not found in the database:</span
+        >
+        <span v-for="(item, index) in notFound" :key="index" class="mx-1">
+          {{ item }}
+        </span>
       </div>
 
-      <div class="my-4">
-        <p class=" font-semibold text-lg">Tuesday</p>
-        <div v-if="tueCourses.length > 0">
-          <table-header></table-header>
-          <table-row
-            v-for="(course, index) in tueCourses"
-            :key="course[0] + index"
-          >
-            <template #time>
-              {{ course[1] }}
-            </template>
+      <!-- generated timetable -->
+      <div class="flex flex-col w-4/5" v-show="coursesGotten">
+        <div class="my-4">
+          <p class=" font-semibold text-lg">Monday</p>
+          <div v-if="monCourses.length > 0">
+            <table-header></table-header>
+            <table-row
+              v-for="(course, index) in monCourses"
+              :key="course[0] + index"
+            >
+              <template #time>
+                {{ course[1] }}
+              </template>
 
-            <template #code>
-              {{ course[0] }}
-            </template>
+              <template #code>
+                {{ course[0] }}
+              </template>
 
-            <template #venue>
-              {{ course[2] }}
-            </template>
-          </table-row>
+              <template #venue>
+                {{ course[2] }}
+              </template>
+            </table-row>
+          </div>
+          <p v-else>No Courses found for this day</p>
         </div>
-        <p v-else>No Courses found for this day</p>
-      </div>
 
-      <div class="my-4">
-        <p class=" font-semibold text-lg">Wednesday</p>
-        <div v-if="wedCourses.length > 0">
-          <table-header></table-header>
-          <table-row
-            v-for="(course, index) in wedCourses"
-            :key="course[0] + index"
-          >
-            <template #time>
-              {{ course[1] }}
-            </template>
+        <div class="my-4">
+          <p class=" font-semibold text-lg">Tuesday</p>
+          <div v-if="tueCourses.length > 0">
+            <table-header></table-header>
+            <table-row
+              v-for="(course, index) in tueCourses"
+              :key="course[0] + index"
+            >
+              <template #time>
+                {{ course[1] }}
+              </template>
 
-            <template #code>
-              {{ course[0] }}
-            </template>
+              <template #code>
+                {{ course[0] }}
+              </template>
 
-            <template #venue>
-              {{ course[2] }}
-            </template>
-          </table-row>
+              <template #venue>
+                {{ course[2] }}
+              </template>
+            </table-row>
+          </div>
+          <p v-else>No Courses found for this day</p>
         </div>
-        <p v-else>No Courses found for this day</p>
-      </div>
 
-      <div class="my-4">
-        <p class=" font-semibold text-lg">Thursday</p>
-        <div v-if="thurCourses.length > 0">
-          <table-header></table-header>
-          <table-row
-            v-for="(course, index) in thurCourses"
-            :key="course[0] + index"
-          >
-            <template #time>
-              {{ course[1] }}
-            </template>
+        <div class="my-4">
+          <p class=" font-semibold text-lg">Wednesday</p>
+          <div v-if="wedCourses.length > 0">
+            <table-header></table-header>
+            <table-row
+              v-for="(course, index) in wedCourses"
+              :key="course[0] + index"
+            >
+              <template #time>
+                {{ course[1] }}
+              </template>
 
-            <template #code>
-              {{ course[0] }}
-            </template>
+              <template #code>
+                {{ course[0] }}
+              </template>
 
-            <template #venue>
-              {{ course[2] }}
-            </template>
-          </table-row>
+              <template #venue>
+                {{ course[2] }}
+              </template>
+            </table-row>
+          </div>
+          <p v-else>No Courses found for this day</p>
         </div>
-        <p v-else>No Courses found for this day</p>
-      </div>
 
-      <div class="my-4">
-        <p class=" font-semibold text-lg">Friday</p>
-        <div v-if="friCourses.length > 0">
-          <table-header></table-header>
-          <table-row
-            v-for="(course, index) in friCourses"
-            :key="course[0] + index"
-          >
-            <template #time>
-              {{ course[1] }}
-            </template>
+        <div class="my-4">
+          <p class=" font-semibold text-lg">Thursday</p>
+          <div v-if="thurCourses.length > 0">
+            <table-header></table-header>
+            <table-row
+              v-for="(course, index) in thurCourses"
+              :key="course[0] + index"
+            >
+              <template #time>
+                {{ course[1] }}
+              </template>
 
-            <template #code>
-              {{ course[0] }}
-            </template>
+              <template #code>
+                {{ course[0] }}
+              </template>
 
-            <template #venue>
-              {{ course[2] }}
-            </template>
-          </table-row>
+              <template #venue>
+                {{ course[2] }}
+              </template>
+            </table-row>
+          </div>
+          <p v-else>No Courses found for this day</p>
         </div>
-        <p v-else>No Courses found for this day</p>
-      </div>
 
-      <div class="flex w-full justify-center items-center mt-4">
-        <p @click="resetTimetable" class="btn btn-red">Back</p>
+        <div class="my-4">
+          <p class=" font-semibold text-lg">Friday</p>
+          <div v-if="friCourses.length > 0">
+            <table-header></table-header>
+            <table-row
+              v-for="(course, index) in friCourses"
+              :key="course[0] + index"
+            >
+              <template #time>
+                {{ course[1] }}
+              </template>
+
+              <template #code>
+                {{ course[0] }}
+              </template>
+
+              <template #venue>
+                {{ course[2] }}
+              </template>
+            </table-row>
+          </div>
+          <p v-else>No Courses found for this day</p>
+        </div>
+
+        <div class="flex w-full justify-center items-center mt-4">
+          <p @click="resetTimetable" class="btn btn-green">Back</p>
+        </div>
       </div>
     </div>
   </div>
@@ -400,11 +409,11 @@ export default {
   @apply p-1 rounded shadow text-white w-32 text-center mx-2 cursor-pointer;
 }
 
-.btn-green {
-  @apply bg-green-600;
+.btn-orange {
+  @apply bg-custom-orange;
 }
 
-.btn-red {
-  @apply bg-red-400;
+.btn-green {
+  @apply bg-green-800;
 }
 </style>
