@@ -10,7 +10,7 @@ function compareTimes(timeOne, timeTwo) {
     return;
   }
 
-  console.log({ timeOne, timeTwo });
+  // console.log({ timeOne, timeTwo });
 
   // if (typeof timeOne !== "array" || typeof timeTwo !== "array") {
   //   throw new Error("One argument passed is not a string");
@@ -99,8 +99,6 @@ export default {
         !Number.isInteger(Number(val[1])) ||
         !val[0].match(/[a-zA-z]/g)
       ) {
-        console.log(val[0]);
-        console.log(val[0].match(/[a-zA-z]/g));
         this.isInputErr = true;
         this.inputErr = "Input value must be a course code";
         return { status: "fail" };
@@ -134,7 +132,7 @@ export default {
           this.coursesGotten = true;
           //populate list of courses not found in the database
           this.notFound = data["not_found"];
-          console.log(data);
+          // console.log(data);
 
           let codes = data["codes"],
             loctimes = data["times"];
