@@ -57,32 +57,48 @@ export default {
 
   methods: {
     validateCourseCode() {
+      if (!this.courseCode) {
+        return { status: "fail" };
+      }
+
+      // check if course code is comprised of whitespace only
       if (this.courseCode.trim() == "") {
         return { status: "fail" };
       }
 
-      let courses = this.courseList.split(",");
-      if (courses.includes(this.courseCode.trim())) {
+      // check if course code has already been inputed
+      if (this.courseList.includes(this.courseCode.toUpperCase())) {
         this.isInputErr = true;
         this.inputErr = "You've already added this course code!";
         return { status: "fail" };
       }
 
+      // guard against excess whitespace in the middle
       let val = this.courseCode.trim().split(" ");
       val = val.filter(item => {
         return item != "";
       });
 
+      // if the code wasn't spaced
       if (val.length < 2) {
         this.isInputErr = true;
         this.inputErr =
           "Put a space between the numbers and the letters. Eg: ABC 123";
         return { status: "fail" };
-      } else if (val.length > 2) {
+      }
+      // if there's more than one code
+      else if (val.length > 2) {
         this.isInputErr = true;
         this.inputErr = "Only input one course code at a time";
         return { status: "fail" };
-      } else if (!Number.isInteger(Number(val[1]))) {
+      }
+      // if it's not a code in the first place
+      else if (
+        !Number.isInteger(Number(val[1])) ||
+        !val[0].match(/[a-zA-z]/g)
+      ) {
+        console.log(val[0]);
+        console.log(val[0].match(/[a-zA-z]/g));
         this.isInputErr = true;
         this.inputErr = "Input value must be a course code";
         return { status: "fail" };
