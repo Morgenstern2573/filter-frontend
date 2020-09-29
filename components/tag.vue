@@ -9,7 +9,7 @@ export default {
   },
   methods: {
     handleRemoveReq() {
-      this.$emit("remove-req");
+      this.$emit("remove-req", this.content);
     }
   }
 };

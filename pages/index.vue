@@ -162,19 +162,32 @@ export default {
       this.notFound = [];
     },
 
-    deleteLastCourseCode() {
-      let val = this.courseList.split(",");
-      val.splice(-2);
-      this.courseList = val.join(",");
-      if (this.courseList != "") {
-        this.courseList += ",";
-      }
-    },
+    // deleteLastCourseCode() {
+    //   let val = this.courseList.split(",");
+    //   val.splice(-2);
+    //   this.courseList = val.join(",");
+    //   if (this.courseList != "") {
+    //     this.courseList += ",";
+    //   }
+    // },
 
-    clearCourseList() {
-      this.courseList = "";
-      this.isInputErr = false;
-      this.inputErr = "";
+    // clearCourseList() {
+    //   this.courseList = "";
+    //   this.isInputErr = false;
+    //   this.inputErr = "";
+    // },
+
+    handleRemoveReq(content) {
+      let pos = this.courseList.indexOf(content);
+      if (pos !== -1) {
+        let pre = this.courseList.slice(0, pos),
+          post = "";
+        if (pos + content.length + 1 < this.courseList.length) {
+          post = this.courseList.slice(pos + content.length + 1);
+        }
+
+        this.courseList = pre + post;
+      }
     }
   }
 };
@@ -212,7 +225,7 @@ export default {
             type="text"
             placeholder="Course Code here..."
             class="bg-gray-100 border border-gray-300 rounded shadow px-2 py-1 focus:bg-white outline-none"
-            autofocus="true"
+            autofocus
           />
           <p @click="appendCourseCode" class="btn btn-orange my-4">
             Add
@@ -229,14 +242,17 @@ export default {
         <div v-if="courseList.length > 0">
           <div class="flex justify-center items-center mt-4 flex-col">
             <div class="flex items-center flex-wrap">
-              <p class="mr-4">Added Courses:</p>
+              <p class="mr-2">Added Courses:</p>
               <!-- <p
                 class="border border-gray-300 rounded shadow px-2 py-1 bg-white"
                 v-show="courseList.length > 0"
               >
                 {{ courseList }}
               </p> -->
-              <taglist :tags="courseList"></taglist>
+              <taglist
+                :tags="courseList"
+                @remove-req="handleRemoveReq"
+              ></taglist>
             </div>
             <!-- <div class="flex justify-center items-center mt-4">
               <p @click="clearCourseList" class="btn btn-green">

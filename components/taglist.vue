@@ -24,13 +24,24 @@ export default {
 
   data() {
     return {};
+  },
+
+  methods: {
+    handleRemoveReq(content) {
+      this.$emit("remove-req", content);
+    }
   }
 };
 </script>
 
 <template>
   <div class="flex flex-wrap">
-    <tag v-for="(i, idx) in tagList" :key="'tag' + idx" :content="i"></tag>
+    <tag
+      v-for="(i, idx) in tagList"
+      :key="'tag' + idx"
+      :content="i"
+      @remove-req="handleRemoveReq"
+    ></tag>
   </div>
 </template>
 
