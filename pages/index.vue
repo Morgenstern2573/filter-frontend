@@ -5,14 +5,16 @@ import tableRow from "~/components/tableRow.vue";
 import taglist from "~/components/taglist.vue";
 
 //The callback function used to sort courses based on their time
-function compareTimes(timeOne = "", timeTwo = "") {
+function compareTimes(timeOne, timeTwo) {
   if (!timeOne || !timeTwo) {
     return;
   }
 
-  if (typeof timeOne !== "string" || typeof timeTwo !== "string") {
-    throw new Error("One argument passed is not a string");
-  }
+  console.log({ timeOne, timeTwo });
+
+  // if (typeof timeOne !== "array" || typeof timeTwo !== "array") {
+  //   throw new Error("One argument passed is not a string");
+  // }
 
   let val1 = Number(timeOne[1].split("-")[0]);
   let val2 = Number(timeTwo[1].split("-")[0]);
@@ -309,7 +311,8 @@ export default {
         class="text-center text-red-800 bg-red-300 p-4"
       >
         <span
-          >Warning!The following course(s) were not found in the database:</span
+          >Warning!The following course(s) were not found on the official
+          timetable:</span
         >
         <span v-for="(item, index) in notFound" :key="index" class="mx-1">
           {{ item }}
