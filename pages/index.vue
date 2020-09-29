@@ -2,6 +2,7 @@
 import { getCourseData } from "~/lib/api.js";
 import tableHeader from "~/components/tableHeader.vue";
 import tableRow from "~/components/tableRow.vue";
+import taglist from "~/components/taglist.vue";
 
 //The callback function used to sort courses based on their time
 function compareTimes(timeOne = "", timeTwo = "") {
@@ -9,7 +10,7 @@ function compareTimes(timeOne = "", timeTwo = "") {
     return;
   }
 
-  if (typeof timeOne !== String || typeof timeTwo !== String) {
+  if (typeof timeOne !== "string" || typeof timeTwo !== "string") {
     throw new Error("One argument passed is not a string");
   }
 
@@ -26,6 +27,12 @@ function compareTimes(timeOne = "", timeTwo = "") {
 }
 
 export default {
+  name: "IndexPage",
+
+  components: {
+    taglist
+  },
+
   data: function() {
     return {
       courseList: "",
@@ -189,11 +196,11 @@ export default {
       <!-- course selection box -->
       <div
         v-show="!coursesGotten"
-        class="rounded bg-white bg-opacity-25 shadow-md p-12 py-4"
+        class="rounded bg-white bg-opacity-25 shadow-md p-12 py-4 container"
       >
         <h1 class=" text-center text-3xl font-bold">TimeTable Generator</h1>
         <h2
-          class="text-center text-sm font-mono font-light mb-8 text-green-800"
+          class="text-center text-sm font-mono font-light mb-4 text-green-800"
         >
           For the Faculty of Science, Unilag
         </h2>
@@ -221,16 +228,17 @@ export default {
 
         <div v-if="courseList.length > 0">
           <div class="flex justify-center items-center mt-4 flex-col">
-            <div class="flex items-center">
-              <p class="mr-4">Course List:</p>
-              <p
+            <div class="flex items-center flex-wrap">
+              <p class="mr-4">Added Courses:</p>
+              <!-- <p
                 class="border border-gray-300 rounded shadow px-2 py-1 bg-white"
                 v-show="courseList.length > 0"
               >
                 {{ courseList }}
-              </p>
+              </p> -->
+              <taglist :tags="courseList"></taglist>
             </div>
-            <div class="flex justify-center items-center mt-4">
+            <!-- <div class="flex justify-center items-center mt-4">
               <p @click="clearCourseList" class="btn btn-green">
                 Reset
               </p>
@@ -241,7 +249,7 @@ export default {
               >
                 Delete Last
               </p>
-            </div>
+            </div> -->
           </div>
 
           <div class="flex justify-center items-center mt-8">
@@ -257,7 +265,9 @@ export default {
 
         <span class="text-center text-sm w-full block mt-4"
           >Confused about something? The FAQs are
-          <nuxt-link class="underline" to="/faq">over here</nuxt-link></span
+          <nuxt-link class="underline text-green-600" to="/faq"
+            >over here</nuxt-link
+          ></span
         >
       </div>
 
@@ -411,6 +421,10 @@ export default {
 
 .btn-orange {
   @apply bg-custom-orange;
+}
+
+.btn-orange:hover {
+  @apply bg-opacity-75;
 }
 
 .btn-green {
