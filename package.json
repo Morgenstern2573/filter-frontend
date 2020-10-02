@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "@nuxtjs/axios": "^5.12.1",
-    "nuxt": "^2.14.6"
+    "nuxt": "^2.14.6",
+    "nuxt-buefy": "^0.4.3"
   },
   "devDependencies": {
     "@nuxtjs/tailwindcss": "^2.1.0"

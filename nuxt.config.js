@@ -51,7 +51,7 @@ export default {
   /*
    ** Nuxt.js modules
    */
-  modules: ["@nuxtjs/axios"],
+  modules: ["@nuxtjs/axios", "nuxt-buefy"],
   /*
    ** Build configuration
    ** See https://nuxtjs.org/api/configuration-build/
@@ -59,8 +59,8 @@ export default {
   build: {},
 
   axios: {
-    baseURL: "https://lit-citadel-58061.herokuapp.com",
-    // baseURL: "http://127.0.0.1:5000",
+    // baseURL: "https://lit-citadel-58061.herokuapp.com",
+    baseURL: "http://127.0.0.1:5000",
     credentials: false
   }
 };

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div id="app">
     <Nuxt />
   </div>
 </template>
@@ -56,5 +56,26 @@ body {
 .button--grey:hover {
   color: #fff;
   background-color: #35495e;
+}
+
+.select select:focus,
+.taginput .taginput-container.is-focusable:focus,
+.textarea:focus,
+.input:focus,
+.select select.is-focused,
+.taginput .is-focused.taginput-container.is-focusable,
+.is-focused.textarea,
+.is-focused.input,
+.select select:active,
+.taginput .taginput-container.is-focusable:active,
+.textarea:active,
+.input:active,
+.select select.is-active,
+.taginput .is-active.taginput-container.is-focusable,
+.is-active.textarea,
+.is-active.input {
+  border-color: #d2eccf !important;
+  -webkit-box-shadow: 0 0 0 0.125em #d0f5e169 !important;
+  box-shadow: 0 0 0 0.125em #d0f5e169 !important;
 }
 </style>

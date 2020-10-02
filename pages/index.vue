@@ -1,5 +1,5 @@
 <script>
-import { getCourseData } from "~/lib/api.js";
+import { getCodeList, getCourseData } from "~/lib/api.js";
 import tableHeader from "~/components/tableHeader.vue";
 import tableRow from "~/components/tableRow.vue";
 import taglist from "~/components/taglist.vue";
@@ -33,6 +33,10 @@ export default {
 
   components: {
     taglist
+  },
+
+  async asyncData() {
+    return { codeList: await getCodeList() };
   },
 
   data: function() {
@@ -205,6 +209,28 @@ export default {
         this.courseList = pre + post;
       }
     }
+  },
+
+  computed: {
+    filteredData() {
+      if (!this.codeList) {
+        return;
+      }
+
+      if (this.codeList === []) {
+        return;
+      }
+
+      if (!Array.isArray(this.codeList)) {
+        console.log(typeof this.codeList);
+        console.log("hey");
+        return;
+      }
+
+      return this.codeList.filter(elem => {
+        return elem.startsWith(this.courseCode.toUpperCase());
+      });
+    }
   }
 };
 </script>
@@ -234,16 +260,21 @@ export default {
           For the Faculty of Science, Unilag
         </h2>
 
-        <div class="flex justify-center items-center flex-wrap">
-          <input
-            @keyup.enter="appendCourseCode"
+        <div
+          class="flex justify-center items-center flex-wrap"
+          @keyup.enter="appendCourseCode"
+        >
+          <b-autocomplete
             v-model="courseCode"
-            type="text"
+            :data="filteredData"
             placeholder="Course Code here..."
-            class="bg-gray-100 border border-gray-300 rounded shadow px-2 py-1 focus:bg-white outline-none"
+            icon="magnify"
             autofocus
-          />
-          <p @click="appendCourseCode" class="btn btn-orange my-4">
+          >
+            <template slot="empty">No results found</template>
+          </b-autocomplete>
+
+          <p @click="appendCourseCode" class="btn btn-orange my-4 py-2">
             Add
           </p>
         </div>
@@ -305,7 +336,7 @@ export default {
 
       <!-- courses not found -->
       <div
-        v-show="notFound.length > 0"
+        v-if="notFound.length > 0"
         class="text-center text-red-800 bg-red-300 p-4"
       >
         <span
@@ -318,7 +349,7 @@ export default {
       </div>
 
       <!-- generated timetable -->
-      <div class="flex flex-col w-4/5" v-show="coursesGotten">
+      <div class="flex flex-col w-4/5" v-if="coursesGotten">
         <div class="my-4">
           <p class=" font-semibold text-lg">Monday</p>
           <div v-if="monCourses.length > 0">
@@ -439,7 +470,7 @@ export default {
           <p v-else>No Courses found for this day</p>
         </div>
 
-        <div class="flex w-full justify-center items-center mt-4">
+        <div class="flex w-full justify-center items-center mt-4 mb-8">
           <p @click="resetTimetable" class="btn btn-green">Back</p>
         </div>
       </div>

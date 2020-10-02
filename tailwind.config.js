@@ -25,5 +25,6 @@ module.exports = {
       "plugins/**/*.js",
       "nuxt.config.js"
     ]
-  }
+  },
+  important: "#app"
 };
