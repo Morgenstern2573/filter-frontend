@@ -4,6 +4,10 @@ import tableHeader from "~/components/tableHeader.vue";
 import tableRow from "~/components/tableRow.vue";
 import taglist from "~/components/taglist.vue";
 
+// local storage object
+const myStorage = window.localStorage;
+const storageKey = "generate-tt-course-code-list";
+
 //The callback function used to sort courses based on their time
 function compareTimes(timeOne, timeTwo) {
   if (!timeOne || !timeTwo) {
@@ -37,7 +41,11 @@ export default {
 
   async asyncData() {
     let codeList = await getCodeList();
-    return { codeList };
+    let courseList = myStorage.getItem(storageKey);
+    if (!courseList) {
+      courseList = "";
+    }
+    return { codeList, courseList };
   },
 
   data: function() {
@@ -127,6 +135,9 @@ export default {
     },
 
     async generateTimeTable() {
+      // store list in local storage
+      myStorage.setItem(storageKey, this.courseList);
+
       if (this.courseList != "") {
         //request for time table data
         this.isLoading = true;
