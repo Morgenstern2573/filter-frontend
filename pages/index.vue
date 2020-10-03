@@ -36,7 +36,10 @@ export default {
   },
 
   async asyncData() {
-    return { codeList: await getCodeList() };
+    console.log("fetching");
+    let codeList = await getCodeList();
+    console.log("fetched");
+    return { codeList };
   },
 
   data: function() {
@@ -72,7 +75,7 @@ export default {
         return { status: "fail" };
       }
 
-      // check if course code has already been inputed
+      // check if course code has already been inputted
       if (this.courseList.includes(this.courseCode.toUpperCase())) {
         this.isInputErr = true;
         this.inputErr = "You've already added this course code!";
@@ -240,7 +243,7 @@ export default {
     <div class="flex items-center flex-col">
       <!-- course selection box -->
       <div
-        v-show="!coursesGotten"
+        v-if="!coursesGotten"
         class="rounded bg-white bg-opacity-25 shadow-md p-12 py-4 container"
       >
         <h1 class=" text-center text-3xl font-bold">TimeTable Generator</h1>
@@ -278,31 +281,13 @@ export default {
 
         <div v-if="courseList.length > 0">
           <div class="flex justify-center items-center mt-4 flex-col">
+            <p class="mr-2">Added Courses:</p>
             <div class="flex items-center flex-wrap">
-              <p class="mr-2">Added Courses:</p>
-              <!-- <p
-                class="border border-gray-300 rounded shadow px-2 py-1 bg-white"
-                v-show="courseList.length > 0"
-              >
-                {{ courseList }}
-              </p> -->
               <taglist
                 :tags="courseList"
                 @remove-req="handleRemoveReq"
               ></taglist>
             </div>
-            <!-- <div class="flex justify-center items-center mt-4">
-              <p @click="clearCourseList" class="btn btn-green">
-                Reset
-              </p>
-              <p
-                @click="deleteLastCourseCode"
-                style="width:8rem"
-                class="btn btn-green"
-              >
-                Delete Last
-              </p>
-            </div> -->
           </div>
 
           <div class="flex justify-center items-center mt-8">
@@ -338,132 +323,131 @@ export default {
           {{ item }}
         </span>
       </div>
+    </div>
+    <!-- generated timetable -->
+    <div class="flex flex-col w-4/5" v-if="coursesGotten">
+      <div class="my-4">
+        <p class=" font-semibold text-lg">Monday</p>
+        <div v-if="monCourses.length > 0">
+          <table-header></table-header>
+          <table-row
+            v-for="(course, index) in monCourses"
+            :key="course[0] + index"
+          >
+            <template #time>
+              {{ course[1] }}
+            </template>
 
-      <!-- generated timetable -->
-      <div class="flex flex-col w-4/5" v-if="coursesGotten">
-        <div class="my-4">
-          <p class=" font-semibold text-lg">Monday</p>
-          <div v-if="monCourses.length > 0">
-            <table-header></table-header>
-            <table-row
-              v-for="(course, index) in monCourses"
-              :key="course[0] + index"
-            >
-              <template #time>
-                {{ course[1] }}
-              </template>
+            <template #code>
+              {{ course[0] }}
+            </template>
 
-              <template #code>
-                {{ course[0] }}
-              </template>
-
-              <template #venue>
-                {{ course[2] }}
-              </template>
-            </table-row>
-          </div>
-          <p v-else>No Courses found for this day</p>
+            <template #venue>
+              {{ course[2] }}
+            </template>
+          </table-row>
         </div>
+        <p v-else>No Courses found for this day</p>
+      </div>
 
-        <div class="my-4">
-          <p class=" font-semibold text-lg">Tuesday</p>
-          <div v-if="tueCourses.length > 0">
-            <table-header></table-header>
-            <table-row
-              v-for="(course, index) in tueCourses"
-              :key="course[0] + index"
-            >
-              <template #time>
-                {{ course[1] }}
-              </template>
+      <div class="my-4">
+        <p class=" font-semibold text-lg">Tuesday</p>
+        <div v-if="tueCourses.length > 0">
+          <table-header></table-header>
+          <table-row
+            v-for="(course, index) in tueCourses"
+            :key="course[0] + index"
+          >
+            <template #time>
+              {{ course[1] }}
+            </template>
 
-              <template #code>
-                {{ course[0] }}
-              </template>
+            <template #code>
+              {{ course[0] }}
+            </template>
 
-              <template #venue>
-                {{ course[2] }}
-              </template>
-            </table-row>
-          </div>
-          <p v-else>No Courses found for this day</p>
+            <template #venue>
+              {{ course[2] }}
+            </template>
+          </table-row>
         </div>
+        <p v-else>No Courses found for this day</p>
+      </div>
 
-        <div class="my-4">
-          <p class=" font-semibold text-lg">Wednesday</p>
-          <div v-if="wedCourses.length > 0">
-            <table-header></table-header>
-            <table-row
-              v-for="(course, index) in wedCourses"
-              :key="course[0] + index"
-            >
-              <template #time>
-                {{ course[1] }}
-              </template>
+      <div class="my-4">
+        <p class=" font-semibold text-lg">Wednesday</p>
+        <div v-if="wedCourses.length > 0">
+          <table-header></table-header>
+          <table-row
+            v-for="(course, index) in wedCourses"
+            :key="course[0] + index"
+          >
+            <template #time>
+              {{ course[1] }}
+            </template>
 
-              <template #code>
-                {{ course[0] }}
-              </template>
+            <template #code>
+              {{ course[0] }}
+            </template>
 
-              <template #venue>
-                {{ course[2] }}
-              </template>
-            </table-row>
-          </div>
-          <p v-else>No Courses found for this day</p>
+            <template #venue>
+              {{ course[2] }}
+            </template>
+          </table-row>
         </div>
+        <p v-else>No Courses found for this day</p>
+      </div>
 
-        <div class="my-4">
-          <p class=" font-semibold text-lg">Thursday</p>
-          <div v-if="thurCourses.length > 0">
-            <table-header></table-header>
-            <table-row
-              v-for="(course, index) in thurCourses"
-              :key="course[0] + index"
-            >
-              <template #time>
-                {{ course[1] }}
-              </template>
+      <div class="my-4">
+        <p class=" font-semibold text-lg">Thursday</p>
+        <div v-if="thurCourses.length > 0">
+          <table-header></table-header>
+          <table-row
+            v-for="(course, index) in thurCourses"
+            :key="course[0] + index"
+          >
+            <template #time>
+              {{ course[1] }}
+            </template>
 
-              <template #code>
-                {{ course[0] }}
-              </template>
+            <template #code>
+              {{ course[0] }}
+            </template>
 
-              <template #venue>
-                {{ course[2] }}
-              </template>
-            </table-row>
-          </div>
-          <p v-else>No Courses found for this day</p>
+            <template #venue>
+              {{ course[2] }}
+            </template>
+          </table-row>
         </div>
+        <p v-else>No Courses found for this day</p>
+      </div>
 
-        <div class="my-4">
-          <p class=" font-semibold text-lg">Friday</p>
-          <div v-if="friCourses.length > 0">
-            <table-header></table-header>
-            <table-row
-              v-for="(course, index) in friCourses"
-              :key="course[0] + index"
-            >
-              <template #time>
-                {{ course[1] }}
-              </template>
+      <div class="my-4">
+        <p class=" font-semibold text-lg">Friday</p>
+        <div v-if="friCourses.length > 0">
+          <table-header></table-header>
+          <table-row
+            v-for="(course, index) in friCourses"
+            :key="course[0] + index"
+          >
+            <template #time>
+              {{ course[1] }}
+            </template>
 
-              <template #code>
-                {{ course[0] }}
-              </template>
+            <template #code>
+              {{ course[0] }}
+            </template>
 
-              <template #venue>
-                {{ course[2] }}
-              </template>
-            </table-row>
-          </div>
-          <p v-else>No Courses found for this day</p>
+            <template #venue>
+              {{ course[2] }}
+            </template>
+          </table-row>
         </div>
+        <p v-else>No Courses found for this day</p>
+      </div>
 
-        <div class="flex w-full justify-center items-center mt-4 mb-8">
-          <p @click="resetTimetable" class="btn btn-green">Back</p>
-        </div>
+      <div class="flex w-full justify-center items-center mt-4 mb-8">
+        <p @click="resetTimetable" class="btn btn-green">Back</p>
       </div>
     </div>
   </div>
