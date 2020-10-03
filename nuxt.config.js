@@ -24,8 +24,7 @@ export default {
         content: process.env.npm_package_description || ""
       }
     ],
-    link: [{ rel: "icon", type: "image/x-icon", href: "/favicon.ico" }],
-    script: [{ src: "https://code.iconify.design/1/1.0.7/iconify.min.js" }]
+    link: [{ rel: "icon", type: "image/x-icon", href: "/favicon.ico" }]
   },
   /*
    ** Global CSS

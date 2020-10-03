@@ -238,16 +238,6 @@ export default {
 <template>
   <div class=" flex min-h-screen justify-center items-center">
     <div class="flex items-center flex-col">
-      <!-- css loader -->
-      <div
-        v-show="isLoading"
-        class="absolute flex items-center justify-center inset-0 bg-gray-100  bg-opacity-50"
-      >
-        <div
-          class=" border-4 border-gray-200 rounded-full h-20 w-20 animate-spin"
-          style="border-top: 4px solid white"
-        ></div>
-      </div>
       <!-- course selection box -->
       <div
         v-show="!coursesGotten"
@@ -316,13 +306,14 @@ export default {
           </div>
 
           <div class="flex justify-center items-center mt-8">
-            <p
+            <b-button
               @click="generateTimeTable"
               class="btn btn-orange"
               style="width: 12rem"
+              :loading="isLoading"
             >
               Generate TimeTable
-            </p>
+            </b-button>
           </div>
         </div>
 
