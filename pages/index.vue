@@ -36,9 +36,7 @@ export default {
   },
 
   async asyncData() {
-    console.log("fetching");
     let codeList = await getCodeList();
-    console.log("fetched");
     return { codeList };
   },
 
