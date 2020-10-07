@@ -1,4 +1,5 @@
 <script>
+import domtoimage from "dom-to-image";
 import { getCodeList, getCourseData } from "~/lib/api.js";
 import tableHeader from "~/components/tableHeader.vue";
 import tableRow from "~/components/tableRow.vue";
@@ -6,7 +7,7 @@ import taglist from "~/components/taglist.vue";
 
 // local storage object
 const myStorage = window.localStorage;
-const storageKey = "generate-tt-course-code-list";
+const STORAGE_KEY = "generate-tt-course-code-list";
 
 //The callback function used to sort courses based on their time
 function compareTimes(timeOne, timeTwo) {
@@ -14,11 +15,9 @@ function compareTimes(timeOne, timeTwo) {
     return;
   }
 
-  // console.log({ timeOne, timeTwo });
-
-  // if (typeof timeOne !== "array" || typeof timeTwo !== "array") {
-  //   throw new Error("One argument passed is not a string");
-  // }
+  if (!Array.isArray(timeOne) || !Array.isArray(timeTwo)) {
+    throw new Error("One argument passed to compareTimes is not an array");
+  }
 
   let val1 = Number(timeOne[1].split("-")[0]);
   let val2 = Number(timeTwo[1].split("-")[0]);
@@ -41,7 +40,7 @@ export default {
 
   async asyncData() {
     let codeList = await getCodeList();
-    let courseList = myStorage.getItem(storageKey);
+    let courseList = myStorage.getItem(STORAGE_KEY);
     if (!courseList) {
       courseList = "";
     }
@@ -61,7 +60,8 @@ export default {
       thurCourses: [],
       friCourses: [],
       coursesGotten: false,
-      isLoading: false
+      isLoading: false,
+      imgURL: ""
     };
   },
 
@@ -120,6 +120,11 @@ export default {
       }
     },
 
+    storeCourseList() {
+      // store list in local storage
+      myStorage.setItem(STORAGE_KEY, this.courseList);
+    },
+
     appendCourseCode() {
       let res = this.validateCourseCode();
       if (res.status == "fail") {
@@ -131,13 +136,20 @@ export default {
         this.courseCode = "";
         this.isInputErr = false;
         this.inputErr = "";
+
+        this.storeCourseList();
       }
     },
 
-    async generateTimeTable() {
-      // store list in local storage
-      myStorage.setItem(storageKey, this.courseList);
+    createTimetableImg(self) {
+      domtoimage
+        .toJpeg(document.getElementById("timetable"), { quality: 0.95 })
+        .then(function(dataUrl) {
+          self.imgURL = dataUrl;
+        });
+    },
 
+    async generateTimeTable() {
       if (this.courseList != "") {
         //request for time table data
         this.isLoading = true;
@@ -148,7 +160,6 @@ export default {
           this.coursesGotten = true;
           //populate list of courses not found in the database
           this.notFound = data["not_found"];
-          // console.log(data);
 
           let codes = data["codes"],
             loctimes = data["times"];
@@ -179,6 +190,11 @@ export default {
           this.thurCourses.sort(compareTimes);
           this.friCourses.sort(compareTimes);
         }
+
+        setTimeout(() => {
+          this.createTimetableImg(this);
+        }, 500);
+        // this.createTimetableImg();
       } else {
         return;
       }
@@ -194,21 +210,6 @@ export default {
       this.notFound = [];
     },
 
-    // deleteLastCourseCode() {
-    //   let val = this.courseList.split(",");
-    //   val.splice(-2);
-    //   this.courseList = val.join(",");
-    //   if (this.courseList != "") {
-    //     this.courseList += ",";
-    //   }
-    // },
-
-    // clearCourseList() {
-    //   this.courseList = "";
-    //   this.isInputErr = false;
-    //   this.inputErr = "";
-    // },
-
     handleRemoveReq(content) {
       let pos = this.courseList.indexOf(content);
       if (pos !== -1) {
@@ -220,6 +221,30 @@ export default {
 
         this.courseList = pre + post;
       }
+
+      this.storeCourseList();
+    },
+
+    clearCourseList() {
+      this.courseList = "";
+      this.storeCourseList();
+    },
+
+    addLaggingZerosToTime(timeStr = "") {
+      if (!timeStr) {
+        return;
+      }
+
+      if (typeof timeStr !== "string") {
+        return;
+      }
+
+      let [start, end] = timeStr.split("-");
+
+      start = start + ":00";
+      end = end + ":00";
+
+      return [start, end].join(" - ");
     }
   },
 
@@ -234,8 +259,6 @@ export default {
       }
 
       if (!Array.isArray(this.codeList)) {
-        console.log(typeof this.codeList);
-        console.log("hey");
         return;
       }
 
@@ -270,13 +293,12 @@ export default {
             v-model="courseCode"
             :data="filteredData"
             placeholder="Course Code here..."
-            icon="magnify"
             autofocus
           >
             <template slot="empty">No results found</template>
           </b-autocomplete>
 
-          <p @click="appendCourseCode" class="btn btn-orange my-4 py-2">
+          <p @click="appendCourseCode" class="btn btn-orange my-4 py-2 w-32">
             Add
           </p>
         </div>
@@ -290,7 +312,12 @@ export default {
 
         <div v-if="courseList.length > 0">
           <div class="flex justify-center items-center mt-4 flex-col">
-            <p class="mr-2">Added Courses:</p>
+            <div class="flex justify-between items-center w-full px-8">
+              <p class="mr-2">Added Courses:</p>
+              <!-- <b-button class="btn btn-orange" @click="clearCourseList"
+                >Clear All</b-button
+              > -->
+            </div>
             <div class="flex items-center flex-wrap">
               <taglist
                 :tags="courseList"
@@ -335,128 +362,137 @@ export default {
     </div>
     <!-- generated timetable -->
     <div class="flex flex-col w-4/5" v-if="coursesGotten">
-      <div class="my-4">
-        <p class=" font-semibold text-lg">Monday</p>
-        <div v-if="monCourses.length > 0">
-          <table-header></table-header>
-          <table-row
-            v-for="(course, index) in monCourses"
-            :key="course[0] + index"
-          >
-            <template #time>
-              {{ course[1] }}
-            </template>
+      <div
+        id="timetable"
+        style="background-color: #f3eff7;
+  background-image: url(data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 20.5V18H0v-2h20v-2H0v-2h20v-2H0V8h20V6H0V4h20V2H0V0h22v20h2V0h2v20h2V0h2v20h2V0h2v20h2V0h2v20h2v2H20v-1.5zM0 20h2v20H0V20zm4 0h2v20H4V20zm4 0h2v20H8V20zm4 0h2v20h-2V20zm4 0h2v20h-2V20zm4 4h20v2H20v-2zm0 4h20v2H20v-2zm0 4h20v2H20v-2zm0 4h20v2H20v-2z' fill='%2387ee6f' fill-opacity='0.14' fill-rule='evenodd'/%3E%3C/svg%3E);"
+      >
+        <div class="my-4">
+          <p class=" font-semibold text-lg">Monday</p>
+          <div v-if="monCourses.length > 0">
+            <table-header></table-header>
+            <table-row
+              v-for="(course, index) in monCourses"
+              :key="course[0] + index"
+            >
+              <template #time>
+                {{ addLaggingZerosToTime(course[1]) }}
+              </template>
 
-            <template #code>
-              {{ course[0] }}
-            </template>
+              <template #code>
+                {{ course[0] }}
+              </template>
 
-            <template #venue>
-              {{ course[2] }}
-            </template>
-          </table-row>
+              <template #venue>
+                {{ course[2] }}
+              </template>
+            </table-row>
+          </div>
+          <p v-else>No Courses found for this day</p>
         </div>
-        <p v-else>No Courses found for this day</p>
-      </div>
 
-      <div class="my-4">
-        <p class=" font-semibold text-lg">Tuesday</p>
-        <div v-if="tueCourses.length > 0">
-          <table-header></table-header>
-          <table-row
-            v-for="(course, index) in tueCourses"
-            :key="course[0] + index"
-          >
-            <template #time>
-              {{ course[1] }}
-            </template>
+        <div class="my-4">
+          <p class=" font-semibold text-lg">Tuesday</p>
+          <div v-if="tueCourses.length > 0">
+            <table-header></table-header>
+            <table-row
+              v-for="(course, index) in tueCourses"
+              :key="course[0] + index"
+            >
+              <template #time>
+                {{ addLaggingZerosToTime(course[1]) }}
+              </template>
 
-            <template #code>
-              {{ course[0] }}
-            </template>
+              <template #code>
+                {{ course[0] }}
+              </template>
 
-            <template #venue>
-              {{ course[2] }}
-            </template>
-          </table-row>
+              <template #venue>
+                {{ course[2] }}
+              </template>
+            </table-row>
+          </div>
+          <p v-else>No Courses found for this day</p>
         </div>
-        <p v-else>No Courses found for this day</p>
-      </div>
 
-      <div class="my-4">
-        <p class=" font-semibold text-lg">Wednesday</p>
-        <div v-if="wedCourses.length > 0">
-          <table-header></table-header>
-          <table-row
-            v-for="(course, index) in wedCourses"
-            :key="course[0] + index"
-          >
-            <template #time>
-              {{ course[1] }}
-            </template>
+        <div class="my-4">
+          <p class=" font-semibold text-lg">Wednesday</p>
+          <div v-if="wedCourses.length > 0">
+            <table-header></table-header>
+            <table-row
+              v-for="(course, index) in wedCourses"
+              :key="course[0] + index"
+            >
+              <template #time>
+                {{ addLaggingZerosToTime(course[1]) }}
+              </template>
 
-            <template #code>
-              {{ course[0] }}
-            </template>
+              <template #code>
+                {{ course[0] }}
+              </template>
 
-            <template #venue>
-              {{ course[2] }}
-            </template>
-          </table-row>
+              <template #venue>
+                {{ course[2] }}
+              </template>
+            </table-row>
+          </div>
+          <p v-else>No Courses found for this day</p>
         </div>
-        <p v-else>No Courses found for this day</p>
-      </div>
 
-      <div class="my-4">
-        <p class=" font-semibold text-lg">Thursday</p>
-        <div v-if="thurCourses.length > 0">
-          <table-header></table-header>
-          <table-row
-            v-for="(course, index) in thurCourses"
-            :key="course[0] + index"
-          >
-            <template #time>
-              {{ course[1] }}
-            </template>
+        <div class="my-4">
+          <p class=" font-semibold text-lg">Thursday</p>
+          <div v-if="thurCourses.length > 0">
+            <table-header></table-header>
+            <table-row
+              v-for="(course, index) in thurCourses"
+              :key="course[0] + index"
+            >
+              <template #time>
+                {{ addLaggingZerosToTime(course[1]) }}
+              </template>
 
-            <template #code>
-              {{ course[0] }}
-            </template>
+              <template #code>
+                {{ course[0] }}
+              </template>
 
-            <template #venue>
-              {{ course[2] }}
-            </template>
-          </table-row>
+              <template #venue>
+                {{ course[2] }}
+              </template>
+            </table-row>
+          </div>
+          <p v-else>No Courses found for this day</p>
         </div>
-        <p v-else>No Courses found for this day</p>
-      </div>
 
-      <div class="my-4">
-        <p class=" font-semibold text-lg">Friday</p>
-        <div v-if="friCourses.length > 0">
-          <table-header></table-header>
-          <table-row
-            v-for="(course, index) in friCourses"
-            :key="course[0] + index"
-          >
-            <template #time>
-              {{ course[1] }}
-            </template>
+        <div class="my-4">
+          <p class=" font-semibold text-lg">Friday</p>
+          <div v-if="friCourses.length > 0">
+            <table-header></table-header>
+            <table-row
+              v-for="(course, index) in friCourses"
+              :key="course[0] + index"
+            >
+              <template #time>
+                {{ addLaggingZerosToTime(course[1]) }}
+              </template>
 
-            <template #code>
-              {{ course[0] }}
-            </template>
+              <template #code>
+                {{ course[0] }}
+              </template>
 
-            <template #venue>
-              {{ course[2] }}
-            </template>
-          </table-row>
+              <template #venue>
+                {{ course[2] }}
+              </template>
+            </table-row>
+          </div>
+          <p v-else>No Courses found for this day</p>
         </div>
-        <p v-else>No Courses found for this day</p>
       </div>
 
       <div class="flex w-full justify-center items-center mt-4 mb-8">
-        <p @click="resetTimetable" class="btn btn-green">Back</p>
+        <p @click="resetTimetable" class="btn btn-green px-4 px-2 w-32">Back</p>
+        <a :href="imgURL" download class="btn btn-orange px-4 px-2"
+          >Download Timetable</a
+        >
       </div>
     </div>
   </div>
@@ -464,7 +500,7 @@ export default {
 
 <style scoped>
 .btn {
-  @apply p-1 rounded shadow text-white w-32 text-center mx-2 cursor-pointer;
+  @apply p-1 rounded shadow text-white text-center mx-2 cursor-pointer;
 }
 
 .btn-orange {
